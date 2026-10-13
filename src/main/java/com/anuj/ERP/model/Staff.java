@@ -35,4 +35,10 @@ public class Staff{
     @NotNull
     private Long contact;
 
+    @Column(nullable = false)
+    private boolean enabled = true;
+
+    public boolean getEnabled() {
+        return enabled;
+    }
 }

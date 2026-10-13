@@ -1,43 +1,70 @@
 package com.anuj.ERP.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 public class  JwtService {
 
-    private final SecretKey secretKey =
-            Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final JwtEncoder jwtEncoder;
+    private final JwtDecoder jwtDecoder;
 
-    public String generateToken(UserDetails userDetails) {
+    @Value("${jwt.issuer}")
+    String issuer;
 
-        return Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .claim("roles", userDetails.getAuthorities()
+    public JwtService(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder) {
+        this.jwtEncoder = jwtEncoder;
+        this.jwtDecoder = jwtDecoder;
+    }
+
+    // Generates jwt token
+    public String generateToken(Authentication authentication) {
+        Instant now = Instant.now();
+
+        List<String> authorities =
+                authentication.getAuthorities()
                         .stream()
-                        .map(authority -> authority.getAuthority())
-                        .toList())
-                .setIssuedAt(new Date())
-                .setExpiration(
-                        new Date(System.currentTimeMillis() + 1000 * 60 * 60)
+                        .map(GrantedAuthority::getAuthority)
+                        .toList();
+
+        // Payload creation section
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer(issuer)
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(900))
+                .id(UUID.randomUUID().toString())
+                .subject(authentication.getName())
+                .claim(
+                        "authorities",
+                        authorities
                 )
-                .signWith(secretKey)
-                .compact();
+                .build();
+
+        Jwt jwt = jwtEncoder.encode(
+                JwtEncoderParameters.from(claims)
+        );
+
+        return jwt.getTokenValue();
     }
 
-    public String extractUsername(String token) {
-
-        return Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+    public Jwt decodeToken(String token) {
+        return jwtDecoder.decode(token);
     }
+
 }

@@ -3,6 +3,8 @@ package com.anuj.ERP.serviceimpl;
 import com.anuj.ERP.ENUM.Degree;
 import com.anuj.ERP.ENUM.Year;
 import com.anuj.ERP.ResponseDTO.StudentResponseDTO;
+import com.anuj.ERP.exception.ResourceAlreadyExistsException;
+import com.anuj.ERP.exception.ResourceNotFoundException;
 import com.anuj.ERP.mapper.StudentMapper;
 import com.anuj.ERP.model.Courses;
 import com.anuj.ERP.model.Students;
@@ -31,9 +33,9 @@ public class StudentsServiceimpl implements StudentsService{
 
     @Override
     public StudentResponseDTO addStudent(StudentCreateDTO studentCreateDTO) {
-        if(studentsRepository.existsById(studentCreateDTO.getUid())) throw new RuntimeException("Uid is already in use");
-        if(studentsRepository.existsByContact(studentCreateDTO.getContact())) throw new RuntimeException("Contact is already in use");
-        if(studentsRepository.existsByEmail(studentCreateDTO.getEmail())) throw new RuntimeException("Email is already in use");
+        if(studentsRepository.existsById(studentCreateDTO.getUid())) throw new ResourceAlreadyExistsException("UID is already in Use");
+        if(studentsRepository.existsByContact(studentCreateDTO.getContact())) throw new ResourceAlreadyExistsException("Contact is already in use");
+        if(studentsRepository.existsByEmail(studentCreateDTO.getEmail())) throw new ResourceAlreadyExistsException("Email is already in use");
 
         Students students = new Students();
         students.setUid(studentCreateDTO.getUid());
@@ -47,7 +49,7 @@ public class StudentsServiceimpl implements StudentsService{
 
     @Override
     public StudentResponseDTO updateStudent(long uid, StudentsUpdateDTO studentsUpdateDTO){
-        Students students = studentsRepository.findById(uid).orElseThrow(()-> new RuntimeException("Student not found"));
+        Students students = studentsRepository.findById(uid).orElseThrow(()-> new ResourceNotFoundException("Student with UID" + uid + "not found"));
 
         if(studentsUpdateDTO.getName() != null){
             students.setName(studentsUpdateDTO.getName());
@@ -73,7 +75,7 @@ public class StudentsServiceimpl implements StudentsService{
 
     @Override
     public StudentResponseDTO getStudentByUID(long uid) {
-            Students students = studentsRepository.findById(uid).orElseThrow(()-> new RuntimeException("Student not found"));
+            Students students = studentsRepository.findById(uid).orElseThrow(()-> new ResourceNotFoundException("Student with UID" + uid + "not found"));
         return studentMapper.toResponse(students);
     }
 
@@ -98,7 +100,7 @@ public class StudentsServiceimpl implements StudentsService{
 
     public String deleteStudent(long uid){
         Students students = studentsRepository.findById(uid)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Student with UID" + uid + "not found"));
 
         studentsRepository.delete(students);
         return "Student successfully deleted";

@@ -1,31 +1,27 @@
 
 package com.anuj.ERP.security;
 
-import io.jsonwebtoken.Claims;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.Date;
+import java.time.Instant;
 
 @Service
 public class TokenRevocationService {
 
     private final JdbcTemplate jdbcTemplate;
-    private final JwtService jwtService;
 
     public TokenRevocationService(
-            JdbcTemplate jdbcTemplate,
-            JwtService jwtService) {
+            JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.jwtService = jwtService;
+
     }
 
-    public void revokeToken(String token) {
-        Claims claims = jwtService.extractClaims(token);
-
-        String jti = claims.getId();
-        Date expiration = claims.getExpiration();
+    public void revokeToken(Jwt jwt) {
+        String jti = jwt.getId();
+        Instant expiration = jwt.getExpiresAt();
 
         if (jti == null || expiration == null) {
             throw new IllegalArgumentException(
@@ -34,12 +30,12 @@ public class TokenRevocationService {
         }
 
         jdbcTemplate.update("""
-                INSERT INTO revoked_tokens (jti, expires_at)
-                VALUES (?, ?)
-                ON DUPLICATE KEY UPDATE jti = jti
-                """,
+            INSERT INTO revoked_tokens (jti, expires_at)
+            VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE jti = jti
+            """,
                 jti,
-                new Timestamp(expiration.getTime())
+                Timestamp.from(expiration)
         );
     }
 
@@ -48,8 +44,7 @@ public class TokenRevocationService {
             return true;
         }
 
-        Boolean revoked = jdbcTemplate.queryForObject(
-                """
+        Boolean revoked = jdbcTemplate.queryForObject("""
                 SELECT EXISTS(
                     SELECT 1
                     FROM revoked_tokens

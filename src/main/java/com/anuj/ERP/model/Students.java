@@ -44,6 +44,9 @@ public class Students{
     @NotNull
     private Long contact;
 
+    @Column(nullable = false)
+    private boolean enabled = true;
+
     // In registration student id is stored as foreign key
     @OneToMany(
             mappedBy = "students",
@@ -51,6 +54,8 @@ public class Students{
     )
     private List<Registration> registrations;
 
-
+    public boolean getEnabled() {
+        return enabled;
     }
+}
 

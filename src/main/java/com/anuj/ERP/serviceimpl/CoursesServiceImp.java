@@ -3,6 +3,8 @@ package com.anuj.ERP.serviceimpl;
 import com.anuj.ERP.ENUM.Degree;
 import com.anuj.ERP.ENUM.Year;
 import com.anuj.ERP.ResponseDTO.CourseResponseDTO;
+import com.anuj.ERP.exception.ResourceAlreadyExistsException;
+import com.anuj.ERP.exception.ResourceNotFoundException;
 import com.anuj.ERP.mapper.CourseMapper;
 import com.anuj.ERP.model.Courses;
 import com.anuj.ERP.repository.CoursesRepository;
@@ -30,7 +32,7 @@ public class CoursesServiceImp implements CoursesService {
     @Transactional
     public CourseResponseDTO createCourse(CourseCreateDTO courseCreateDTO) {
         if (coursesRepository.existsByName(courseCreateDTO.getName())) {
-            throw new RuntimeException("Course is already existing");
+            throw new ResourceAlreadyExistsException("Course with Name " +courseCreateDTO.getName()+ " already Exists" );
         }
         Courses saved = coursesRepository.save(courseMapper.toEntity(courseCreateDTO));
         return courseMapper.toResponse(saved);
@@ -38,7 +40,7 @@ public class CoursesServiceImp implements CoursesService {
     
     public CourseResponseDTO findCourse(long id){
         Courses courses = coursesRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Course with ID " + id + " not found"));
         return courseMapper.toResponse(courses);
     }
 
@@ -63,7 +65,7 @@ public class CoursesServiceImp implements CoursesService {
     @Transactional
     public String deleteCourse(long id){
         Courses course = coursesRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Course id not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Course with ID " + id + " not found"));
         coursesRepository.delete(course);
         return "Course Successfully deleted";
     }
@@ -88,7 +90,7 @@ public class CoursesServiceImp implements CoursesService {
 
     @Transactional
     public CourseResponseDTO update(CourseUpdateDTO courses, long id){
-        Courses c = coursesRepository.findById(id).orElseThrow(()-> new RuntimeException("Course not found"));
+        Courses c = coursesRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Course with ID " + id + " not found"));
         c.setCourseType(courses.getCourseType());
         c.setDegree(courses.getDegree());
         c.setName(courses.getName());

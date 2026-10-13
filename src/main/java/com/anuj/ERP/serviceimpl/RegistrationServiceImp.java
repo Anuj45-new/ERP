@@ -2,6 +2,7 @@ package com.anuj.ERP.serviceimpl;
 
 import com.anuj.ERP.ENUM.Year;
 import com.anuj.ERP.ResponseDTO.RegistrationResponseDTO;
+import com.anuj.ERP.exception.ResourceNotFoundException;
 import com.anuj.ERP.mapper.RegistrationMapper;
 import com.anuj.ERP.model.Courses;
 import com.anuj.ERP.model.Registration;
@@ -30,11 +31,11 @@ public class RegistrationServiceImp implements RegistrationService {
     public RegistrationResponseDTO newRegistration(RegistrationCreateDTO registrationCreateDTO){
         Registration registration = new Registration();
         Students students = studentsRepository.findById(registrationCreateDTO.getUid())
-                 .orElseThrow(() -> new RuntimeException("No student with uid found"));
+                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
         List<Courses> courses = new ArrayList<>();
         for(Long x : registrationCreateDTO.getCid()){
-            courses.add(coursesRepository.findById(x). orElseThrow(() -> new RuntimeException("No such course found")));
+            courses.add(coursesRepository.findById(x). orElseThrow(() -> new ResourceNotFoundException("Course with id : "+ x + " not found")));
         }
         registration.setRegistrationType(registrationCreateDTO.getRegistrationType());
         registration.setFees(registrationCreateDTO.getFees());
@@ -48,10 +49,10 @@ public class RegistrationServiceImp implements RegistrationService {
     @Override
     public RegistrationResponseDTO getRegistration(long uid, Year year) {
         Students students = studentsRepository.findById(uid)
-                .orElseThrow(() -> new RuntimeException("No student with uid found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Student with UID" + uid + "not found"));
 
         Registration registration = registrationRepository.findByStudentsAndYear(students,year)
-                .orElseThrow(() -> new RuntimeException("No registration record found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Student's Registration not found!"));
 
         return registrationMapper.toResponse(registration);
     }

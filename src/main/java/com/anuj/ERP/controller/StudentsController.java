@@ -37,7 +37,7 @@ public class StudentsController {
                 .status(HttpStatus.CREATED)
                 .body(studentsService.addStudent(studentCreateDTO));
     }
-    // here we don't need @Valid as it is mostly use in DTO verifications as well as @RequestBody as it is passed as string in URL not json
+
     @GetMapping("/{uid}")
     public ResponseEntity<StudentResponseDTO> getStudentByUID(@PathVariable @Valid long uid){
         return ResponseEntity.status(HttpStatus.OK)
@@ -51,7 +51,6 @@ public class StudentsController {
                 .body(studentsService.getAllStudents(degree,year));
     }
 
-    // we don't need to maintain the flow of URL here
     @DeleteMapping("/{uid}")
     public ResponseEntity<String> deleteStudent(@PathVariable @Valid long uid){
         return ResponseEntity.status(HttpStatus.OK).body(studentsService.deleteStudent(uid));
@@ -65,17 +64,6 @@ public class StudentsController {
         }
         return new ResponseEntity<>(studentsService.deleteAllStudents(degree, year),HttpStatus.OK);
     }
-
-//    @GetMapping("/csrf-token")
-//    public CsrfToken getToken(HttpServletRequest request){
-//        return (CsrfToken) request.getAttribute("_csrf");
-//    }
-//
-     @GetMapping("/session")
-    public HttpSession gotSession(HttpServletRequest request){
-        return request.getSession();
-    }
-
 
 }
 

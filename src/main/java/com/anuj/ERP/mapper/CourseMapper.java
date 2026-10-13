@@ -14,6 +14,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @Component
+
 public class CourseMapper {
     public Courses toEntity(CourseCreateDTO courseCreateDTO){
         Courses courses = new Courses();
